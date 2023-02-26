@@ -51,7 +51,7 @@ static bool isMinecraftVersion(const QString &uid)
     return uid == "net.minecraft";
 }
 
-void VersionFile::applyTo(LaunchProfile *profile, const RuntimeContext & runtimeContext)
+void VersionFile::applyTo(LaunchProfile *profile)
 {
     // Only real Minecraft can set those. Don't let anything override them.
     if (isMinecraftVersion(uid))
@@ -77,15 +77,15 @@ void VersionFile::applyTo(LaunchProfile *profile, const RuntimeContext & runtime
 
     for (auto library : libraries)
     {
-        profile->applyLibrary(library, runtimeContext);
+        profile->applyLibrary(library);
     }
     for (auto mavenFile : mavenFiles)
     {
-        profile->applyMavenFile(mavenFile, runtimeContext);
+        profile->applyMavenFile(mavenFile);
     }
     for (auto agent : agents)
     {
-        profile->applyAgent(agent, runtimeContext);
+        profile->applyAgent(agent);
     }
     profile->applyProblemSeverity(getProblemSeverity());
 }

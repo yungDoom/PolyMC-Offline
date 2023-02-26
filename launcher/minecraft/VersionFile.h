@@ -41,6 +41,7 @@
 #include <QSet>
 
 #include <memory>
+#include "minecraft/OpSys.h"
 #include "minecraft/Rule.h"
 #include "ProblemProvider.h"
 #include "Library.h"
@@ -59,7 +60,7 @@ class VersionFile : public ProblemContainer
     friend class MojangVersionFormat;
     friend class OneSixVersionFormat;
 public: /* methods */
-    void applyTo(LaunchProfile* profile, const RuntimeContext & runtimeContext);
+    void applyTo(LaunchProfile* profile);
 
 public: /* data */
     /// PolyMC: order hint for this version file if no explicit order is set

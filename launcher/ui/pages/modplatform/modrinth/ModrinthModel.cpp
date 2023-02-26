@@ -41,7 +41,6 @@
 #include "minecraft/MinecraftInstance.h"
 #include "minecraft/PackProfile.h"
 #include "ui/dialogs/ModDownloadDialog.h"
-#include "ui/widgets/ProjectItem.h"
 
 #include <QMessageBox>
 
@@ -75,40 +74,31 @@ auto ModpackListModel::data(const QModelIndex& index, int role) const -> QVarian
     }
 
     Modrinth::Modpack pack = modpacks.at(pos);
-    switch (role) {
-        case Qt::ToolTipRole: {
-            if (pack.description.length() > 100) {
-                // some magic to prevent to long tooltips and replace html linebreaks
-                QString edit = pack.description.left(97);
-                edit = edit.left(edit.lastIndexOf("<br>")).left(edit.lastIndexOf(" ")).append("...");
-                return edit;
-            }
-            return pack.description;
+    if (role == Qt::DisplayRole) {
+        return pack.name;
+    } else if (role == Qt::ToolTipRole) {
+        if (pack.description.length() > 100) {
+            // some magic to prevent to long tooltips and replace html linebreaks
+            QString edit = pack.description.left(97);
+            edit = edit.left(edit.lastIndexOf("<br>")).left(edit.lastIndexOf(" ")).append("...");
+            return edit;
         }
-        case Qt::DecorationRole: {
-            if (m_logoMap.contains(pack.iconName))
-                return m_logoMap.value(pack.iconName);
+        return pack.description;
+    } else if (role == Qt::DecorationRole) {
+        if (m_logoMap.contains(pack.iconName)) {
+            auto icon = m_logoMap.value(pack.iconName);
+            // FIXME: This doesn't really belong here, but Qt doesn't offer a good way right now ;(
+            auto icon_scaled = QIcon(icon.pixmap(48, 48).scaledToWidth(48));
 
-            QIcon icon = APPLICATION->getThemedIcon("screenshot-placeholder");
-            ((ModpackListModel*)this)->requestLogo(pack.iconName, pack.iconUrl.toString());
-            return icon;
+            return icon_scaled;
         }
-        case Qt::UserRole: {
-            QVariant v;
-            v.setValue(pack);
-            return v;
-        }
-        case Qt::SizeHintRole:
-            return QSize(0, 58);
-        // Custom data
-        case UserDataTypes::TITLE:
-            return pack.name;
-        case UserDataTypes::DESCRIPTION:
-            return pack.description;
-        case UserDataTypes::SELECTED:
-            return false;
-        default:
-            break;
+        QIcon icon = APPLICATION->getThemedIcon("screenshot-placeholder");
+        ((ModpackListModel*)this)->requestLogo(pack.iconName, pack.iconUrl.toString());
+        return icon;
+    } else if (role == Qt::UserRole) {
+        QVariant v;
+        v.setValue(pack);
+        return v;
     }
 
     return {};
@@ -227,7 +217,7 @@ void ModpackListModel::getLogo(const QString& logo, const QString& logoUrl, Logo
 
 void ModpackListModel::requestLogo(QString logo, QString url)
 {
-    if (m_loadingLogos.contains(logo) || m_failedLogos.contains(logo) || url.isEmpty()) {
+    if (m_loadingLogos.contains(logo) || m_failedLogos.contains(logo)) {
         return;
     }
 

@@ -368,8 +368,3 @@ shared_qobject_ptr<LaunchTask> BaseInstance::getLaunchTask()
 {
     return m_launchProcess;
 }
-
-void BaseInstance::updateRuntimeContext()
-{
-    // NOOP
-}

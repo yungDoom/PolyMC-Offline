@@ -1,38 +1,3 @@
-// SPDX-License-Identifier: GPL-3.0-only
-/*
- *  PolyMC - Minecraft Launcher
- *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, version 3.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
- *      Copyright 2013-2021 MultiMC Contributors
- *
- *      Licensed under the Apache License, Version 2.0 (the "License");
- *      you may not use this file except in compliance with the License.
- *      You may obtain a copy of the License at
- *
- *          http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
-
 #include "Library.h"
 #include "MinecraftInstance.h"
 
@@ -42,7 +7,7 @@
 #include <BuildConfig.h>
 
 
-void Library::getApplicableFiles(const RuntimeContext & runtimeContext, QStringList& jar, QStringList& native, QStringList& native32,
+void Library::getApplicableFiles(OpSys system, QStringList& jar, QStringList& native, QStringList& native32,
                                  QStringList& native64, const QString &overridePath) const
 {
     bool local = isLocal();
@@ -56,7 +21,7 @@ void Library::getApplicableFiles(const RuntimeContext & runtimeContext, QStringL
         }
         return out.absoluteFilePath();
     };
-    QString raw_storage = storageSuffix(runtimeContext);
+    QString raw_storage = storageSuffix(system);
     if(isNative())
     {
         if (raw_storage.contains("${arch}"))
@@ -80,7 +45,7 @@ void Library::getApplicableFiles(const RuntimeContext & runtimeContext, QStringL
 }
 
 QList<NetAction::Ptr> Library::getDownloads(
-    const RuntimeContext & runtimeContext,
+    OpSys system,
     class HttpMetaCache* cache,
     QStringList& failedLocalFiles,
     const QString & overridePath
@@ -142,14 +107,14 @@ QList<NetAction::Ptr> Library::getDownloads(
         return true;
     };
 
-    QString raw_storage = storageSuffix(runtimeContext);
+    QString raw_storage = storageSuffix(system);
     if(m_mojangDownloads)
     {
         if(isNative())
         {
-            auto nativeClassifier = getCompatibleNative(runtimeContext);
-            if(!nativeClassifier.isNull())
+            if(m_nativeClassifiers.contains(system))
             {
+                auto nativeClassifier = m_nativeClassifiers[system];
                 if(nativeClassifier.contains("${arch}"))
                 {
                     auto nat32Classifier = nativeClassifier;
@@ -238,7 +203,7 @@ QList<NetAction::Ptr> Library::getDownloads(
     return out;
 }
 
-bool Library::isActive(const RuntimeContext & runtimeContext) const
+bool Library::isActive() const
 {
     bool result = true;
     if (m_rules.empty())
@@ -250,7 +215,7 @@ bool Library::isActive(const RuntimeContext & runtimeContext) const
         RuleAction ruleResult = Disallow;
         for (auto rule : m_rules)
         {
-            RuleAction temp = rule->apply(this, runtimeContext);
+            RuleAction temp = rule->apply(this);
             if (temp != Defer)
                 ruleResult = temp;
         }
@@ -258,7 +223,7 @@ bool Library::isActive(const RuntimeContext & runtimeContext) const
     }
     if (isNative())
     {
-        result = result && !getCompatibleNative(runtimeContext).isNull();
+        result = result && m_nativeClassifiers.contains(currentSystem);
     }
     return result;
 }
@@ -271,19 +236,6 @@ bool Library::isLocal() const
 bool Library::isAlwaysStale() const
 {
     return m_hint == "always-stale";
-}
-
-QString Library::getCompatibleNative(const RuntimeContext & runtimeContext) const {
-    // try to match precise classifier "[os]-[arch]"
-    auto entry = m_nativeClassifiers.constFind(runtimeContext.getClassifier());
-    // try to match imprecise classifier on legacy architectures "[os]"
-    if (entry == m_nativeClassifiers.constEnd() && runtimeContext.isLegacyArch())
-        entry = m_nativeClassifiers.constFind(runtimeContext.system);
-
-    if (entry == m_nativeClassifiers.constEnd())
-        return QString();
-
-    return entry.value();
 }
 
 void Library::setStoragePrefix(QString prefix)
@@ -305,7 +257,7 @@ QString Library::storagePrefix() const
     return m_storagePrefix;
 }
 
-QString Library::filename(const RuntimeContext & runtimeContext) const
+QString Library::filename(OpSys system) const
 {
     if(!m_filename.isEmpty())
     {
@@ -319,10 +271,9 @@ QString Library::filename(const RuntimeContext & runtimeContext) const
 
     // otherwise native, override classifiers. Mojang HACK!
     GradleSpecifier nativeSpec = m_name;
-    QString nativeClassifier = getCompatibleNative(runtimeContext);
-    if (!nativeClassifier.isNull())
+    if (m_nativeClassifiers.contains(system))
     {
-        nativeSpec.setClassifier(nativeClassifier);
+        nativeSpec.setClassifier(m_nativeClassifiers[system]);
     }
     else
     {
@@ -331,14 +282,14 @@ QString Library::filename(const RuntimeContext & runtimeContext) const
     return nativeSpec.getFileName();
 }
 
-QString Library::displayName(const RuntimeContext & runtimeContext) const
+QString Library::displayName(OpSys system) const
 {
     if(!m_displayname.isEmpty())
         return m_displayname;
-    return filename(runtimeContext);
+    return filename(system);
 }
 
-QString Library::storageSuffix(const RuntimeContext & runtimeContext) const
+QString Library::storageSuffix(OpSys system) const
 {
     // non-native? use only the gradle specifier
     if (!isNative())
@@ -348,10 +299,9 @@ QString Library::storageSuffix(const RuntimeContext & runtimeContext) const
 
     // otherwise native, override classifiers. Mojang HACK!
     GradleSpecifier nativeSpec = m_name;
-    QString nativeClassifier = getCompatibleNative(runtimeContext);
-    if (!nativeClassifier.isNull())
+    if (m_nativeClassifiers.contains(system))
     {
-        nativeSpec.setClassifier(nativeClassifier);
+        nativeSpec.setClassifier(m_nativeClassifiers[system]);
     }
     else
     {

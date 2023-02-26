@@ -16,7 +16,6 @@
 #include "ui/pages/instance/WorldListPage.h"
 #include "ui/pages/instance/ServersPage.h"
 #include "ui/pages/instance/GameOptionsPage.h"
-#include "ui/pages/instance/StoragePage.h"
 
 class InstancePageProvider : public QObject, public BasePageProvider
 {
@@ -47,7 +46,6 @@ public:
         // values.append(new GameOptionsPage(onesix.get()));
         values.append(new ScreenshotsPage(FS::PathCombine(onesix->gameRoot(), "screenshots")));
         values.append(new InstanceSettingsPage(onesix.get()));
-        values.append(new StoragePage(onesix.get()));
         auto logMatcher = inst->getLogFileMatcher();
         if(logMatcher)
         {

@@ -265,9 +265,7 @@ void ModPage::updateModVersions(int prev_count)
                 break;
             }
         }
-
-        // Only add the version if it's valid or using the 'Any' filter, but never if the version is opted out
-        if ((valid || m_filter->versions.empty()) && !optedOut(version))
+        if(valid || m_filter->versions.size() == 0)
             ui->versionSelectionBox->addItem(version.version, QVariant(i));
     }
     if (ui->versionSelectionBox->count() == 0 && prev_count != 0) { 

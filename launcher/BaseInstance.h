@@ -54,7 +54,6 @@
 #include "net/Mode.h"
 
 #include "minecraft/launch/MinecraftServerTarget.h"
-#include "RuntimeContext.h"
 
 class QDir;
 class Task;
@@ -221,12 +220,6 @@ public:
 
     virtual QString typeName() const = 0;
 
-    void updateRuntimeContext();
-    RuntimeContext runtimeContext() const
-    {
-        return m_runtimeContext;
-    }
-
     bool hasVersionBroken() const
     {
         return m_hasBrokenVersion;
@@ -312,7 +305,6 @@ protected: /* data */
     bool m_isRunning = false;
     shared_qobject_ptr<LaunchTask> m_launchProcess;
     QDateTime m_timeStarted;
-    RuntimeContext m_runtimeContext;
 
 private: /* data */
     Status m_status = Status::Present;

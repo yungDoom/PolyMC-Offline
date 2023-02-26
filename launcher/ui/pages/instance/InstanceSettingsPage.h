@@ -93,6 +93,5 @@ private:
     Ui::InstanceSettingsPage *ui;
     BaseInstance *m_instance;
     SettingsObjectPtr m_settings;
-    shared_qobject_ptr<AccountList> m_accounts;
     unique_qobject_ptr<JavaCommon::TestCheck> checker;
 };
