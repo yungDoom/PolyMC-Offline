@@ -26,6 +26,7 @@ set(CORE_SOURCES
     MMCZip.cpp
     MMCStrings.h
     MMCStrings.cpp
+    RuntimeContext.h
 
     # Basic instance manipulation tasks (derived from InstanceTask)
     InstanceCreationTask.h
@@ -102,6 +103,8 @@ set(NET_SOURCES
     net/ChecksumValidator.h
     net/Download.cpp
     net/Download.h
+    net/FetchFlameAPIKey.cpp
+    net/FetchFlameAPIKey.h
     net/FileSink.cpp
     net/FileSink.h
     net/HttpMetaCache.cpp
@@ -288,8 +291,6 @@ set(MINECRAFT_SOURCES
     minecraft/Rule.h
     minecraft/OneSixVersionFormat.cpp
     minecraft/OneSixVersionFormat.h
-    minecraft/OpSys.cpp
-    minecraft/OpSys.h
     minecraft/ParseUtils.cpp
     minecraft/ParseUtils.h
     minecraft/ProfileUtils.cpp
@@ -693,6 +694,8 @@ SET(LAUNCHER_SOURCES
     ui/pages/instance/ServersPage.h
     ui/pages/instance/WorldListPage.cpp
     ui/pages/instance/WorldListPage.h
+    ui/pages/instance/StoragePage.cpp
+    ui/pages/instance/StoragePage.h
 
     # GUI - global settings pages
     ui/pages/global/AccountListPage.cpp
@@ -909,6 +912,7 @@ qt_wrap_ui(LAUNCHER_UI
     ui/pages/instance/VersionPage.ui
     ui/pages/instance/WorldListPage.ui
     ui/pages/instance/ScreenshotsPage.ui
+    ui/pages/instance/StoragePage.ui
     ui/pages/modplatform/atlauncher/AtlOptionalModDialog.ui
     ui/pages/modplatform/atlauncher/AtlPage.ui
     ui/pages/modplatform/VanillaPage.ui
@@ -969,7 +973,6 @@ add_library(Launcher_logic STATIC ${LOGIC_SOURCES} ${LAUNCHER_SOURCES} ${LAUNCHE
 target_include_directories(Launcher_logic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Launcher_logic
     systeminfo
-    Launcher_classparser
     Launcher_murmur2
     nbt++
     ${ZLIB_LIBRARIES}
@@ -977,6 +980,7 @@ target_link_libraries(Launcher_logic
     BuildConfig
     Katabasis
     Qt${QT_VERSION_MAJOR}::Widgets
+    ghcFilesystem::ghc_filesystem
 )
 
 if (UNIX AND NOT CYGWIN AND NOT APPLE)
@@ -992,6 +996,7 @@ target_link_libraries(Launcher_logic
     Qt${QT_VERSION_MAJOR}::Concurrent
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Charts
     ${Launcher_QT_LIBS}
 )
 target_link_libraries(Launcher_logic

@@ -93,8 +93,8 @@ void LaunchController::decideAccount()
         auto reply = CustomMessageBox::selectable(
             m_parentWidget,
             tr("No Accounts"),
-            tr("In order to play Minecraft, you must have at least one Mojang or Microsoft "
-               "account logged in. "
+            tr("In order to play Minecraft, you must have at least one Microsoft or Mojang "
+               "account logged in. Mojang accounts can only be used offline. "
                "Would you like to open the account manager to add an account now?"),
             QMessageBox::Information,
             QMessageBox::Yes | QMessageBox::No
@@ -112,7 +112,18 @@ void LaunchController::decideAccount()
         }
     }
 
+    bool overrideAccount = m_instance->settings()->get("OverrideAccount").toBool();
+    QString overrideAccountProfileId = m_instance->settings()->get("OverrideAccountProfileId").toString();
+
     m_accountToUse = accounts->defaultAccount();
+
+    if (overrideAccount) {
+        int overrideIndex = accounts->findAccountByProfileId(overrideAccountProfileId);
+        if (overrideIndex != -1) {
+            m_accountToUse = accounts->at(overrideIndex);
+        }
+    }
+
     if (!m_accountToUse)
     {
         // If no default account is set, ask the user which one to use.

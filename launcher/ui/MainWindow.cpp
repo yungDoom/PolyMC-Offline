@@ -2,6 +2,7 @@
 /*
  *  PolyMC - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
+ *  Copyright (C) 2022 Lenny McLennington <lenny@sneed.church>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -792,7 +793,6 @@ public:
         instanceToolBar->addSeparator();
 
         instanceToolBar->addAction(actionLaunchInstance);
-        instanceToolBar->addAction(actionLaunchInstanceOffline);
         instanceToolBar->addAction(actionKillInstance);
 
         instanceToolBar->addSeparator();
@@ -1197,7 +1197,6 @@ void MainWindow::updateMainToolBar()
 void MainWindow::updateToolsMenu()
 {
     QToolButton *launchButton = dynamic_cast<QToolButton*>(ui->instanceToolBar->widgetForAction(ui->actionLaunchInstance));
-    QToolButton *launchOfflineButton = dynamic_cast<QToolButton*>(ui->instanceToolBar->widgetForAction(ui->actionLaunchInstanceOffline));
 
     bool currentInstanceRunning = m_selectedInstance && m_selectedInstance->isRunning();
 
@@ -1206,9 +1205,7 @@ void MainWindow::updateToolsMenu()
     ui->actionLaunchInstanceDemo->setDisabled(!m_selectedInstance || currentInstanceRunning);
 
     QMenu *launchMenu = ui->actionLaunchInstance->menu();
-    QMenu *launchOfflineMenu = ui->actionLaunchInstanceOffline->menu();
     launchButton->setPopupMode(QToolButton::MenuButtonPopup);
-    launchOfflineButton->setPopupMode(QToolButton::MenuButtonPopup);
     if (launchMenu)
     {
         launchMenu->clear();
@@ -1217,19 +1214,12 @@ void MainWindow::updateToolsMenu()
     {
         launchMenu = new QMenu(this);
     }
-    if (launchOfflineMenu) {
-        launchOfflineMenu->clear();
-    }
-    else
-    {
-        launchOfflineMenu = new QMenu(this);
-    }
 
     QAction *normalLaunch = launchMenu->addAction(tr("Launch"));
     normalLaunch->setShortcut(QKeySequence::Open);
-    QAction *normalLaunchOffline = launchOfflineMenu->addAction(tr("Launch Offline"));
+    QAction *normalLaunchOffline = launchMenu->addAction(tr("Launch Offline"));
     normalLaunchOffline->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
-    QAction *normalLaunchDemo = launchOfflineMenu->addAction(tr("Launch Demo"));
+    QAction *normalLaunchDemo = launchMenu->addAction(tr("Launch Demo"));
     normalLaunchDemo->setShortcut(QKeySequence(tr("Ctrl+Alt+O")));
     if (m_selectedInstance)
     {
@@ -1262,11 +1252,10 @@ void MainWindow::updateToolsMenu()
 
     QString profilersTitle = tr("Profilers");
     launchMenu->addSeparator()->setText(profilersTitle);
-    launchOfflineMenu->addSeparator()->setText(profilersTitle);
     for (auto profiler : APPLICATION->profilers().values())
     {
         QAction *profilerAction = launchMenu->addAction(profiler->name());
-        QAction *profilerOfflineAction = launchOfflineMenu->addAction(profiler->name());
+        QAction *profilerOfflineAction = launchMenu->addAction(tr("%1 Offline").arg(profiler->name()));
         QString error;
         if (!profiler->check(&error))
         {
@@ -1297,7 +1286,6 @@ void MainWindow::updateToolsMenu()
         }
     }
     ui->actionLaunchInstance->setMenu(launchMenu);
-    ui->actionLaunchInstanceOffline->setMenu(launchOfflineMenu);
 }
 
 void MainWindow::repopulateAccountsMenu()
@@ -1615,26 +1603,38 @@ void MainWindow::setCatBackground(bool enabled)
         QDateTime now = QDateTime::currentDateTime();
         QDateTime birthday(QDate(now.date().year(), 11, 30), QTime(0, 0));
         QDateTime xmas(QDate(now.date().year(), 12, 25), QTime(0, 0));
-        QString cat;
+
+        QString cat = "default";
+        QString catStyleOpt = APPLICATION->settings()->get("CatStyle").toString();
+        if(catStyleOpt == "Floppa")
+            cat = "floppa";
+        else if(catStyleOpt == "Jinx")
+            cat = "jinx";
+
         if(non_stupid_abs(now.daysTo(xmas)) <= 4) {
-            cat = "catmas";
+            cat += "Catmas";
         }
         else if (non_stupid_abs(now.daysTo(birthday)) <= 12) {
-            cat = "cattiversary";
+            cat += "Cattiversary";
         }
         else {
-            cat = "kitteh";
+            cat += "Cat";
         }
+
+        auto cat_position = APPLICATION->settings()->get("CatPosition").toString().toLower().trimmed();
+        if (cat_position != "top left" && cat_position != "bottom left" && cat_position != "bottom right" && cat_position != "top right")
+          cat_position = "top right";
+
         view->setStyleSheet(QString(R"(
 InstanceView
 {
     background-image: url(:/backgrounds/%1);
     background-attachment: fixed;
     background-clip: padding;
-    background-position: top right;
+    background-position: %2;
     background-repeat: none;
     background-color:palette(base);
-})").arg(cat));
+})").arg(cat, cat_position));
     }
     else
     {
@@ -1644,8 +1644,14 @@ InstanceView
 
 void MainWindow::runModalTask(Task *task)
 {
-    connect(task, &Task::failed, [this](QString reason)
+    ProgressDialog loadDialog(this);
+
+    connect(task, &Task::failed, [this, &loadDialog](QString reason)
         {
+            // FIXME:
+            // HACK: I don't know why calling show() on this CustomMessageBox causes loadDialog to not close,
+            // but this forces it to close BEFORE the CustomMessageBox gets opened... I think this is a bad fix
+            loadDialog.close();
             CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->show();
         });
     connect(task, &Task::succeeded, [this, task]()
@@ -1656,13 +1662,15 @@ void MainWindow::runModalTask(Task *task)
                 CustomMessageBox::selectable(this, tr("Warnings"), warnings.join('\n'), QMessageBox::Warning)->show();
             }
         });
-    connect(task, &Task::aborted, [this]
+    connect(task, &Task::aborted, [this, &loadDialog]
         {
+            // HACK: Same bad hack as above slot for Task::failed
+            loadDialog.close();
             CustomMessageBox::selectable(this, tr("Task aborted"), tr("The task has been aborted by the user."), QMessageBox::Information)->show();
         });
-    ProgressDialog loadDialog(this);
     loadDialog.setSkipButton(true, tr("Abort"));
     loadDialog.execWithTask(task);
+    qDebug() << "MainWindow::runModalTask: execWithTask exited properly";
 }
 
 void MainWindow::instanceFromInstanceTask(InstanceTask *rawTask)
@@ -1939,6 +1947,7 @@ void MainWindow::globalSettingsClosed()
     updateMainToolBar();
     updateToolsMenu();
     updateStatusCenter();
+    updateCat();
     // This needs to be done to prevent UI elements disappearing in the event the config is changed
     // but PolyMC exits abnormally, causing the window state to never be saved:
     APPLICATION->settings()->set("MainWindowState", saveState().toBase64());
@@ -2287,6 +2296,11 @@ void MainWindow::updateStatusCenter()
     if (timePlayed > 0) {
         m_statusCenter->setText(tr("Total playtime: %1").arg(Time::prettifyDuration(timePlayed)));
     }
+}
+
+void MainWindow::updateCat()
+{
+    setCatBackground(APPLICATION->settings()->get("TheCat").toBool());
 }
 
 void MainWindow::refreshCurrentInstance(bool running)
