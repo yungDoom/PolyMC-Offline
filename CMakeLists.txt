@@ -139,6 +139,7 @@ set(Launcher_CURSEFORGE_API_KEY "$2a$10$5nTFauX8BoGnCIVsmE5nC.dlceZDIsE01ht2vL6e
 set(Launcher_CURSEFORGE_API_KEY_API_URL "https://cf.polymc.org/api" CACHE STRING "URL to fetch the Curseforge API key from.")
 
 
+
 #### Check the current Git commit and branch
 include(GetGitRevisionDescription)
 git_get_exact_tag(Launcher_GIT_TAG)
