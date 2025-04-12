@@ -71,6 +71,7 @@ QString getCreditsHtml()
 
     //: %1 is the name of the launcher, determined at build time, e.g. "PolyMC Developers"
     stream << "<h3>" << QObject::tr("%1 Developers", "About Credits").arg(BuildConfig.LAUNCHER_NAME) << "</h3>\n";
+    stream << QString("<p>yungDoom %1</p>\n")          .arg(getGitHub("yungDoom"));
     stream << QString("<p>LennyMcLennington %1</p>\n")          .arg(getGitHub("LennyMcLennington"));
     stream << QString("<p>Sefa Eyeoglu (Scrumplex) %1</p>\n")   .arg(getWebsite("https://scrumplex.net"));
     stream << QString("<p>dada513 %1</p>\n")                    .arg(getGitHub("dada513"));
