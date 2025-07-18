@@ -151,8 +151,6 @@ class Config {
 
     QString MODPACKSCH_API_BASE_URL = "https://api.modpacks.ch/";
 
-    QString LEGACY_FTB_CDN_BASE_URL = "https://dist.creeper.host/FTB2/";
-
     QString ATL_DOWNLOAD_SERVER_URL = "https://download.nodecdn.net/containers/atl/";
     QString ATL_API_BASE_URL = "https://api.atlauncher.com/v1/";
 

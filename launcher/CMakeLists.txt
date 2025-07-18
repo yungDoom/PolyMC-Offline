@@ -466,17 +466,6 @@ set(API_SOURCES
     modplatform/helpers/OverrideUtils.cpp
 )
 
-set(FTB_SOURCES
-    modplatform/legacy_ftb/PackFetchTask.h
-    modplatform/legacy_ftb/PackFetchTask.cpp
-    modplatform/legacy_ftb/PackInstallTask.h
-    modplatform/legacy_ftb/PackInstallTask.cpp
-    modplatform/legacy_ftb/PrivatePackManager.h
-    modplatform/legacy_ftb/PrivatePackManager.cpp
-
-    modplatform/legacy_ftb/PackHelpers.h
-)
-
 set(FLAME_SOURCES
     # Flame
     modplatform/flame/FlamePackIndex.cpp
@@ -744,11 +733,6 @@ SET(LAUNCHER_SOURCES
     ui/pages/modplatform/ftb/FtbPage.cpp
     ui/pages/modplatform/ftb/FtbPage.h
 
-    ui/pages/modplatform/legacy_ftb/Page.cpp
-    ui/pages/modplatform/legacy_ftb/Page.h
-    ui/pages/modplatform/legacy_ftb/ListModel.h
-    ui/pages/modplatform/legacy_ftb/ListModel.cpp
-
     ui/pages/modplatform/flame/FlameModel.cpp
     ui/pages/modplatform/flame/FlameModel.h
     ui/pages/modplatform/flame/FlamePage.cpp
@@ -918,7 +902,6 @@ qt_wrap_ui(LAUNCHER_UI
     ui/pages/modplatform/VanillaPage.ui
     ui/pages/modplatform/ModPage.ui
     ui/pages/modplatform/flame/FlamePage.ui
-    ui/pages/modplatform/legacy_ftb/Page.ui
     ui/pages/modplatform/ImportPage.ui
     ui/pages/modplatform/ftb/FtbPage.ui
     ui/pages/modplatform/modrinth/ModrinthPage.ui
