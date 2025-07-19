@@ -1,4 +1,4 @@
-name: Build Application and Make Release
+name: Build Application as Release
 
 on:
   push:
