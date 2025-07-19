@@ -6,7 +6,7 @@ on:
       build_type:
         description: Type of build (Debug, Release, RelWithDebInfo, MinSizeRel)
         type: string
-        default: Release
+        default: Debug
     secrets:
       SPARKLE_ED25519_KEY:
         description: Private key for signing Sparkle updates
