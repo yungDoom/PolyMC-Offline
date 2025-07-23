@@ -23,7 +23,7 @@ Portable builds are provided for AppImage on Linux, Windows, and macOS.
 ## Building
 
 If you want to build PolyMC yourself, check [Build Instructions](https://polymc.org/wiki/development/build-instructions/) for build instructions.<br>
-Use **mingw64.exe** and 32-bit distribution of MSYS2 though.
+**WINDOWS:** Use **mingw64.exe** and [32-bit distribution of MSYS2](https://repo.msys2.org/distrib/i686/) though.
 
 ## Translations
 
